@@ -82,10 +82,8 @@ void pwmrecord(){
     encoder[0] = ENCODER_L.count;
     encoder[1] = ENCODER_R.count;
     if(&file){
-        //res = f_write(&file, speed, sizeof(speed), &bw);
-        res = f_write(&file, encoder, sizeof(encoder), &bw);
-        //res = f_printf(&file, "speed:%d,%d\n\r",speed[0],speed[1]--);
-        //res = f_printf(&file, "encoder: %d,%d\n\r", encoder[0], encoder[1]--);
+        res = f_printf(&file, "speed:%d,%d  ",speed[0],speed[1]--);
+        res = f_printf(&file, "encoder: %d,%d\n", encoder[0], encoder[1]--);
         }
     res = f_sync(&file);
 }
