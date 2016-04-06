@@ -24,11 +24,11 @@ void test_forward(){
 		SpeedValue_right = mvr;
 	}
 
-		ctrlTimer = xTimerCreate("forward control", (Period), pdTRUE, (void *) 1, forward);
+		ctrlTimer = xTimerCreate("forward control", (Period), pdTRUE, (void *) 1, move_forward);
 		xTimerStart(ctrlTimer, 0);
 }
 
-void forward(){
+void move_forward(){
 	int cnt[2];
 	cnt[0] = getEncoderLeft();
 	cnt[1] = getEncoderRight();
