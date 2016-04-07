@@ -14,31 +14,6 @@
 uint32_t SpeedValue_left = SpeedValue;
 uint32_t SpeedValue_right = SpeedValue;
 
-/* Motor Power Switch */
-void mPowerON(){
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_RELAY_PIN, Bit_SET);
-	mSwitchON();
-}
-void mPowerOFF(){
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_RELAY_PIN, Bit_RESET);
-	mSwitchOFF();
-}
-
-/* Enable the control signal pins. You have to enable this before sending
- * PWM value for motor control (MOVE) */
-void mSwitchON(){
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_LEFT_SW_PIN, Bit_SET);
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_RIGHT_SW_PIN, Bit_SET);
-}
-
-/* Switch to the constant voltage between 2.5V~3V
- * and keep motor in idle state (STATIC/STOP)*/
-void mSwitchOFF(){
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_LEFT_SW_PIN, Bit_RESET);
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_RIGHT_SW_PIN, Bit_RESET);
-	mStop();
-}
-
 /* STOP: Reset PWM value to initial setting */
 void mStop(){
 	SpeedValue_left = SpeedValue;
@@ -65,28 +40,7 @@ void mRight(){
 }
 
 void init_motor(void){
-	init_switch();
 	init_motorPWM();
-}
-
-void init_switch(void){
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	/* Enable GPIOD clock */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-
-	/* Enable SWITCH pins for the motors*/
-	GPIO_InitStructure.GPIO_Pin = MOTOR_RELAY_PIN | MOTOR_LEFT_SW_PIN | MOTOR_RIGHT_SW_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(MOTOR_PWM_PORT, &GPIO_InitStructure);
-
-	/* initial(off) */
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_RELAY_PIN, Bit_RESET);
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_LEFT_SW_PIN, Bit_RESET);
-	GPIO_WriteBit(MOTOR_PWM_PORT, MOTOR_RIGHT_SW_PIN, Bit_RESET);
 }
 
 void init_motorPWM(void){
