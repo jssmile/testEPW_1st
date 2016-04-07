@@ -61,6 +61,7 @@ SRC+=motor.c
 SRC+=encoder.c
 SRC+=linear_actuator.c
 SRC+=sensors.c
+SRC+=PID.c
 #----------------------
 
 # epw control
