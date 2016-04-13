@@ -15,7 +15,7 @@ typedef struct PID_struct{
 	float output;
 } pid_struct;
 
-extern inline void Init_pid(pid_struct *pid, float p, float i, float d);
+extern inline void  Init_pid(pid_struct *pid, float p, float i, float d);
 extern inline float pid_cal(pid_struct *pid, float x, float y);
 
 #endif

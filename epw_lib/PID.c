@@ -41,4 +41,6 @@ float pid_cal(pid_struct *pid, float x, float y){
 
 	 //Update the error
 	 pid -> prev_err = pid -> err;
+
+	 return pid -> output;
 }
