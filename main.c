@@ -60,7 +60,7 @@ void initialize()
     
     //SD card
     USART_puts(USART3,"test sdio/fat \n\r");
-    ff_test();
+    start_record();
     USART_puts(USART3,"test end \n\r");
 }
 
