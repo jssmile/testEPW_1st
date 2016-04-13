@@ -77,6 +77,11 @@ void receive_task(){
 			else if(received_string[0] == 't'){
 				test_forward();
 			}
+
+			//PID
+			else if(received_string[0] == 'p'){
+				test_PID();
+			}
 		}
 }
 
