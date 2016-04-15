@@ -25,10 +25,8 @@ float pid_cal(pid_struct *pid, float x, float y){
 	 pid -> err = x - y;
 	 pid -> int_err += pid -> err;
 
-	 if (pid ->int_err >255)
-	 	pid -> int_err = 255;
-	 else if (pid -> int_err <0)
-	 	pid -> int_err = 0;
+	 if (pid ->int_err >255) pid -> int_err = 255;
+	 else if (pid -> int_err <0) pid -> int_err = 0;
 
 	 pid -> diff = pid -> err - pid -> prev_err;
 
@@ -38,6 +36,9 @@ float pid_cal(pid_struct *pid, float x, float y){
 
 	 //Calculate the output
 	 pid -> output = pid -> Kp_temp + pid -> Ki_temp + pid -> Kd_temp;
+
+ 	 if(pid -> output >255.0f) pid -> output = 255.0f;
+	 else if(pid -> output <0.0f) pid -> output = 0.0f;
 
 	 //Update the error
 	 pid -> prev_err = pid -> err;
