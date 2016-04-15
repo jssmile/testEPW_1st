@@ -20,12 +20,27 @@ static float set_encoder_count = 100.0f;
 pid_struct PID_Motor_L;
 pid_struct PID_Motor_R;
 
+/*pid alg premeter.*/
+float Kp_left,Ki_left,Kd_left;
+float Kp_right, Ki_right, Kd_right;
+
 //PWM vlaue tuned by PID algorithm
 int pwm_value_left_pid = 0;
 int pwm_value_right_pid = 0;
 
+void Motor_init(){
+	/*Initialization the right motor of pid paremeter.*/
+    /*Original value p = 5.0f, i = 0.5f, d = 5.0f*/
+	Kp_left=2.5f; Ki_left=0.5f; Kd_left=5.5f;
+	Kp_right=2.5f; Ki_right=0.5f; Kd_right=5.5f;
+
+	Init_pid(&PID_Motor_L, Kp_left, Ki_left, Kd_left);
+	Init_pid(&PID_Motor_R, Kp_right, Ki_right, Kd_right);
+}
+
 /*calculate Position PID of two motor*/
 void test_PID(){
+	Motor_init();
 	cmd_cnt = 50;
 	PIDTimer = xTimerCreate("pid forward test", (Period), pdTRUE, (void *) 1, PID_fprward);
 	xTimerStart(PIDTimer, 0);
@@ -40,6 +55,12 @@ void PID_fprward(){
 		if (cnt[0] || cnt[1]) --cmd_cnt;
 		pwm_value_left_pid = round(pid_cal(&PID_Motor_L , set_encoder_count , cnt[0]));
 		pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
+		
+		USART_puts(USART3, "pid_left:");
+		USART_putd(USART3, pwm_value_left_pid);
+		USART_puts(USART3, "pid_right:");
+		USART_putd(USART3, pwm_value_right_pid);
+
 
 		//Set the safe range of the epw,or the epw may go to the hell
 		if(pwm_value_left_pid > 140)
@@ -76,7 +97,7 @@ void PID_fprward(){
 	USART_putd(USART3, cnt[1]);
 	USART_puts(USART3, "\r\n");
 
-	recControlData(SpeedValue_left, SpeedValue_right, cnt[0], cnt[1]);
+	recControlData(pwm_value_left_pid, pwm_value_right_pid, cnt[0], cnt[1]);
 
 }
 
