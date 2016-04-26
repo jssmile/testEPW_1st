@@ -10,6 +10,11 @@
 
 void getData(void);
 void test_forward(void);
-void forward(void);
+void move_forward(void);
+void test_PID(void);
+void PID_forward(void);
+void tic(void);
+void toc(void);
+void SysTick_Handler(void);
 
 #endif
