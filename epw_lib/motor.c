@@ -11,8 +11,8 @@
 #define TimPeriod 256
 #define TimPrescaler 250
 #define SpeedValue 120 //SpeedValue = TimPeriod * duty cycle (1200*0.5)
-uint32_t SpeedValue_left = SpeedValue;
-uint32_t SpeedValue_right = SpeedValue;
+int SpeedValue_left = SpeedValue;
+int SpeedValue_right = SpeedValue;
 
 /* STOP: Reset PWM value to initial setting */
 void mStop(){
