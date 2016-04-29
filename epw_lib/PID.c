@@ -24,15 +24,14 @@ float pid_cal(pid_struct *pid, float x, float y){
 
 	 pid -> err = x - y;
 	 pid -> int_err += pid -> err;
+ 	 pid -> diff = pid -> err - pid -> prev_err;
 
-	 if (pid ->int_err >255) pid -> int_err = 255;
-	 else if (pid -> int_err <0) pid -> int_err = 0;
-
-	 pid -> diff = pid -> err - pid -> prev_err;
-
-	 pid -> Kp_temp = pid -> Kp * pid -> err;
+ 	 pid -> Kp_temp = pid -> Kp * pid -> err;
 	 pid -> Ki_temp = pid -> Ki * pid -> int_err;
 	 pid -> Kd_temp = pid -> Kd * pid -> diff;
+
+	 if (pid -> Ki_temp >255.0f) pid -> Ki_temp = 255.0f;
+	 else if (pid -> Ki_temp <0.0f) pid -> Ki_temp = 0.0f;
 
 	 //Calculate the output
 	 pid -> output = pid -> Kp_temp + pid -> Ki_temp + pid -> Kd_temp;
