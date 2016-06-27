@@ -42,14 +42,7 @@ void receive_task()
 
         //stop
         else if(received_string[0] == 's') {
-            SpeedValue_left = 120;
-            SpeedValue_right = 120;
-            mMove(SpeedValue_left, SpeedValue_right);
-            USART_puts(USART3, "left");
-            USART_putd(USART3, SpeedValue_left);
-            USART_puts(USART3, " right");
-            USART_putd(USART3, SpeedValue_right);
-            USART_puts(USART3, "\r\n");
+            motor_Stop();
         }
 
         //Linear Acturator
@@ -61,12 +54,10 @@ void receive_task()
 
         else if(received_string[0] == 'd') {
             USART_puts(USART3, "Actu_A_down");
-            //set_linearActuator_A_cmd(LINEAR_ACTU_CCW);
             USART_puts(USART3, "\r\n");
             set_linearActuator_A_cmd(LINEAR_ACTU_CCW);
         } else if(received_string[0] == 'a') {
             USART_puts(USART3, "Actu_A_stop");
-            //set_linearActuator_A_cmd(LINEAR_ACTU_CCW);
             USART_puts(USART3, "\r\n");
             set_linearActuator_A_cmd(LINEAR_ACTU_STOP);
         }
@@ -81,14 +72,12 @@ void receive_task()
 
         else if(received_string[0] == 'k'){
             	USART_puts(USART3, "Actu_B_down");
-            	//set_linearActuator_B_cmd(LINEAR_ACTU_CCW);
             	USART_puts(USART3, "\r\n");
             	set_linearActuator_B_cmd(LINEAR_ACTU_CCW);
         	}
 
         else if(received_string[0] == 'w'){
             	USART_puts(USART3, "Actu_B_stop");
-            	//set_linearActuator_B_cmd(LINEAR_ACTU_CCW);
             	USART_puts(USART3, "\r\n");
             	set_linearActuator_B_cmd(LINEAR_ACTU_STOP);
         	}
