@@ -9,7 +9,6 @@
 #define cmd_times	50 //times
 xTimerHandle ctrlTimer;
 xTimerHandle PIDTimer;
-xTimerHandle PIDTimer2;
 
 extern Encoder_t ENCODER_L;
 extern Encoder_t ENCODER_R;
@@ -32,6 +31,22 @@ int pwm_value_left_pid = 0;
 int pwm_value_right_pid = 0;
 int pwm_value_left, pwm_value_right, pwm_value_left_err, pwm_value_right_err, pwm_value_left_mcu, pwm_value_right_mcu;
 
+//State struct
+State_t EPW_State = EPW_IDLE;
+/*
+typedef enum {
+    EPW_IDLE,
+    EPW_STOP,
+    EPW_FORWARD,
+    EPW_BACKWARD,
+    EPW_LEFT,
+    EPW_RIGHT,
+    EPW_UNREADY,
+    EPW_BUSY,
+    EPW_ERROR
+} State_t;
+*/
+
 void Motor_init()
 {
     /*Initialization the right motor of pid paremeter.*/
@@ -51,10 +66,17 @@ void Motor_init()
 void test_PID_forward()
 {
     Motor_init();
-    cmd_cnt = 30;
+    cmd_cnt = 50;
+    EPW_State = EPW_FORWARD;
+
+    if(xTimerIsTimerActive(PIDTimer) != pdTRUE || (PIDTimer == NULL)){
     PIDTimer = xTimerCreate("pid forward test", (Period), pdTRUE, (void *) 1, PID_forward);
     xTimerStart(PIDTimer, 0);
     USART_putd(USART3, cmd_cnt);
+    }
+    else{
+        xTimerReset(PIDTimer, 0);
+    }
 }
 
 //PID_forward
@@ -64,18 +86,11 @@ void PID_forward()
     cnt[0] = getEncoderLeft();
     cnt[1] = getEncoderRight();
 
-    if(cmd_cnt) {
+    if(cmd_cnt && EPW_State != EPW_STOP) {
+        EPW_State = EPW_FORWARD;
         if (cnt[0] || cnt[1]) --cmd_cnt;
         pwm_value_left_pid = round(pid_cal(&PID_Motor_L , set_encoder_count , cnt[0]));
         pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
-
-        //To see the original pid left and right value which are not tuned in saferange
-        /*
-        USART_puts(USART3, "pid_left:");
-        USART_putd(USART3, pwm_value_left_pid);
-        USART_puts(USART3, "pid_right:");
-        USART_putd(USART3, pwm_value_right_pid);
-*/
 
         //Set the safe range of the epw, or the epw may go to the hell
         if(pwm_value_left_pid > 145)	pwm_value_left_pid = 145;
@@ -91,29 +106,16 @@ void PID_forward()
     }
 
     else {
-        mStop();
+        motor_Stop();
         if(!(cnt[0] || cnt[1])) {
             xTimerDelete(PIDTimer, 0);
             USART_puts(USART3, "complete f");
+            EPW_State = EPW_IDLE;
             //endofRecord();
         }
     }
 
     //record the data
-    /*
-    USART_puts(USART3, "fl:");
-    USART_putd(USART3, SpeedValue_left);
-    USART_puts(USART3, " fr:");
-    USART_putd(USART3, SpeedValue_right);
-    USART_puts(USART3, "\r\nel:");
-    USART_putd(USART3, cnt[0]);
-    USART_puts(USART3, " rl:");
-    USART_putd(USART3, cnt[1]);
-    USART_puts(USART3, " cmd_cnt : ");
-    USART_putd(USART3, cmd_cnt);
-
-    USART_puts(USART3, "\r\n");*/
-
     //recControlData(pwm_value_left_pid, pwm_value_right_pid, cnt[0], cnt[1]);
 
 }
@@ -123,9 +125,14 @@ void test_PID_backward()
 {
     Motor_init();
     cmd_cnt = 30;
-    PIDTimer = xTimerCreate("pid backward test", (Period), pdTRUE, (void *) 1, PID_backward);
+    if(xTimerIsTimerActive(PIDTimer) != pdTRUE || (PIDTimer == NULL)){
+    PIDTimer = xTimerCreate("pid forward test", (Period), pdTRUE, (void *) 1, PID_backward);
     xTimerStart(PIDTimer, 0);
     USART_putd(USART3, cmd_cnt);
+    }
+    else{
+        xTimerReset(PIDTimer, 0);
+    }
 }
 
 //PID_backward
@@ -135,17 +142,11 @@ void PID_backward()
     cnt[0] = getEncoderLeft();
     cnt[1] = getEncoderRight();
 
-    if(cmd_cnt) {
+    if(cmd_cnt && EPW_State != EPW_STOP) {
+        EPW_State = EPW_BACKWARD;
         if (cnt[0] || cnt[1]) --cmd_cnt;
         pwm_value_left_pid = round(pid_cal(&PID_Motor_L , set_encoder_count , cnt[0]));
         pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
-
-        //To see the original pid left and right value which are not tuned in saferange
-        /*USART_puts(USART3, "pid_left:");
-        USART_putd(USART3, pwm_value_left_pid);
-        USART_puts(USART3, "pid_right:");
-        USART_putd(USART3, pwm_value_right_pid);*/
-
 
         //Set the safe range of the epw, or the epw may go to the hell
         if(pwm_value_left_pid > 107)	pwm_value_left_pid = 107;
@@ -165,25 +166,12 @@ void PID_backward()
         if(!(cnt[0] || cnt[1])) {
             xTimerDelete(PIDTimer, 0);
             USART_puts(USART3, "complete b");
+            EPW_State = EPW_IDLE;
             //endofRecord();
         }
     }
 
     //record the data
-    /*
-    USART_puts(USART3, "fl:");
-    USART_putd(USART3, SpeedValue_left);
-    USART_puts(USART3, " fr:");
-    USART_putd(USART3, SpeedValue_right);
-    USART_puts(USART3, "\r\nel:");
-    USART_putd(USART3, cnt[0]);
-    USART_puts(USART3, " rl:");
-    USART_putd(USART3, cnt[1]);
-    USART_puts(USART3, " cmd_cnt : ");
-    USART_putd(USART3, cmd_cnt);
-
-    USART_puts(USART3, "\r\n");*/
-
     //recControlData(pwm_value_left_pid, pwm_value_right_pid, cnt[0], cnt[1]);
 }
 
@@ -191,10 +179,15 @@ void PID_backward()
 void test_PID_left()
 {
     Motor_init();
-    cmd_cnt = 15;
-    PIDTimer = xTimerCreate("pid left test", (Period), pdTRUE, (void *) 1, PID_left);
+    cmd_cnt = 20;
+    if(xTimerIsTimerActive(PIDTimer) != pdTRUE || (PIDTimer == NULL)){
+    PIDTimer = xTimerCreate("pid forward test", (Period), pdTRUE, (void *) 1, PID_left);
     xTimerStart(PIDTimer, 0);
     USART_putd(USART3, cmd_cnt);
+    }
+    else{
+        xTimerReset(PIDTimer, 0);
+    }
 }
 
 //PID_left
@@ -204,17 +197,11 @@ void PID_left()
     cnt[0] = getEncoderLeft();
     cnt[1] = getEncoderRight();
 
-    if(cmd_cnt) {
+    if(cmd_cnt && EPW_State != EPW_STOP) {
+        EPW_State = EPW_LEFT;
         if (cnt[0] || cnt[1]) --cmd_cnt;
         pwm_value_left_pid = round(pid_cal(&PID_Motor_L , set_encoder_count , cnt[0]));
         pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
-
-        //To see the original pid left and right value which are not tuned in saferange
-        /*USART_puts(USART3, "pid_left:");
-        USART_putd(USART3, pwm_value_left_pid);
-        USART_puts(USART3, "pid_right:");
-        USART_putd(USART3, pwm_value_right_pid);*/
-
 
         //Set the safe range of the epw, or the epw may go to the hell
         if(pwm_value_left_pid > 105)	pwm_value_left_pid = 105;
@@ -234,25 +221,12 @@ void PID_left()
         if(!(cnt[0] || cnt[1])) {
             xTimerDelete(PIDTimer, 0);
             USART_puts(USART3, "complete l");
+            EPW_State = EPW_IDLE;
             //endofRecord();
         }
     }
 
     //record the data
-    
-    /*USART_puts(USART3, "fl:");
-    USART_putd(USART3, SpeedValue_left);
-    USART_puts(USART3, " fr:");
-    USART_putd(USART3, SpeedValue_right);
-    USART_puts(USART3, "\r\nel:");
-    USART_putd(USART3, cnt[0]);
-    USART_puts(USART3, " rl:");
-    USART_putd(USART3, cnt[1]);
-    USART_puts(USART3, " cmd_cnt : ");
-    USART_putd(USART3, cmd_cnt);
-
-    USART_puts(USART3, "\r\n");*/
-
     //recControlData(pwm_value_left_pid, pwm_value_right_pid, cnt[0], cnt[1]);
 }
 
@@ -260,10 +234,15 @@ void PID_left()
 void test_PID_right()
 {
     Motor_init();
-    cmd_cnt = 15;
-    PIDTimer = xTimerCreate("pid right test", (Period), pdTRUE, (void *) 1, PID_right);
+    cmd_cnt = 20;
+    if(xTimerIsTimerActive(PIDTimer) != pdTRUE || (PIDTimer == NULL)){
+    PIDTimer = xTimerCreate("pid forward test", (Period), pdTRUE, (void *) 1, PID_right);
     xTimerStart(PIDTimer, 0);
     USART_putd(USART3, cmd_cnt);
+    }
+    else{
+        xTimerReset(PIDTimer, 0);
+    }
 }
 
 //PID_right
@@ -273,17 +252,11 @@ void PID_right()
     cnt[0] = getEncoderLeft();
     cnt[1] = getEncoderRight();
 
-    if(cmd_cnt) {
+    if(cmd_cnt && EPW_State != EPW_STOP) {
+        EPW_State = EPW_RIGHT;
         if (cnt[0] || cnt[1]) --cmd_cnt;
         pwm_value_left_pid = round(pid_cal(&PID_Motor_L , set_encoder_count , cnt[0]));
         pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
-
-        //To see the original pid left and right value which are not tuned in saferange
-        /*USART_puts(USART3, "pid_left:");
-        USART_putd(USART3, pwm_value_left_pid);
-        USART_puts(USART3, "pid_right:");
-        USART_putd(USART3, pwm_value_right_pid);*/
-
 
         //Set the safe range of the epw, or the epw may go to the hell
         if(pwm_value_left_pid > 140)	pwm_value_left_pid = 140;
@@ -303,77 +276,19 @@ void PID_right()
         if(!(cnt[0] || cnt[1])) {
             xTimerDelete(PIDTimer, 0);
             USART_puts(USART3, "complete r");
+            EPW_State = EPW_IDLE;
             //endofRecord();
         }
     }
 
     //record the data
-    
-    /*USART_puts(USART3, "fl:");
-    USART_putd(USART3, SpeedValue_left);
-    USART_puts(USART3, " fr:");
-    USART_putd(USART3, SpeedValue_right);
-    USART_puts(USART3, "\r\nel:");
-    USART_putd(USART3, cnt[0]);
-    USART_puts(USART3, " rl:");
-    USART_putd(USART3, cnt[1]);
-    USART_puts(USART3, " cmd_cnt : ");
-    USART_putd(USART3, cmd_cnt);
-
-    USART_puts(USART3, "\r\n");*/
-
     //recControlData(pwm_value_left_pid, pwm_value_right_pid, cnt[0], cnt[1]);
 }
 
-
-uint32_t mvl, mvr;
-
-void test_forward()
+void motor_Stop()
 {
-    cmd_cnt = 50;
-
-    if(mvl && mvr) {
-        SpeedValue_left = mvl;
-        SpeedValue_right = mvr;
-    }
-
-    ctrlTimer = xTimerCreate("forward control", (Period), pdTRUE, (void *) 1, move_forward);
-    xTimerStart(ctrlTimer, 0);
-}
-
-void move_forward()
-{
-    int cnt[2];
-    cnt[0] = getEncoderLeft();
-    cnt[1] = getEncoderRight();
-
-    if(cmd_cnt) {
-        /* start counting only if encoder get data(motor moving)
-         * moving period = cmd_cnt * Period */
-        if(cnt[0] || cnt[1]) --cmd_cnt;
-        SpeedValue_left += (cnt[0] < 90)? 1: (cnt[0] > 100)? -1: 0;
-        SpeedValue_right += (cnt[1] < 90)? 1: (cnt[1] > 100)? -1: 0;
-
-        mMove(SpeedValue_left, SpeedValue_right);
-        /* record the value for next forward command */
-        mvl = SpeedValue_left;
-        mvr = SpeedValue_right;
-    } else {
-        mStop();
-        if(!(cnt[0] || cnt[1])) {
-            xTimerDelete(ctrlTimer, 0);
-        }
-    }
-
-    USART_puts(USART3, "fl:");
-    USART_putd(USART3, SpeedValue_left);
-    USART_puts(USART3, " fr:");
-    USART_putd(USART3, SpeedValue_right);
-    USART_puts(USART3, "\r\nel:");
-    USART_putd(USART3, cnt[0]);
-    USART_puts(USART3, " rl:");
-    USART_putd(USART3, cnt[1]);
-    USART_puts(USART3, "\r\n");
-
-    recControlData(SpeedValue_left, SpeedValue_right, cnt[0], cnt[1]);
+    SpeedValue_left = 120;
+    SpeedValue_right = 120;
+    EPW_State = EPW_STOP;
+    mMove (SpeedValue_left, SpeedValue_right);
 }
