@@ -21,7 +21,8 @@ extern Encoder_t ENCODER_R;
 uint32_t speed[2];
 uint32_t encoder[2];
 
-void start_record(){
+void start_record()
+{
     SD_NVIC_Configuration();
 
     /* mount file system */
@@ -37,7 +38,8 @@ void start_record(){
     if(res == FR_OK) printf("file is ready to write data!");
 }
 
-void close_record(){
+void close_record()
+{
     res = f_close(&file);
     if(res != FR_OK) printf("fclose failled: %d\n\r", res);
 
@@ -47,44 +49,53 @@ void close_record(){
     if(res == FR_OK) printf("file closed!");
 }
 
-void writeControlValue(uint32_t pwm_L, uint32_t pwm_R){
-    if(&f_value){
+void writeControlValue(uint32_t pwm_L, uint32_t pwm_R)
+{
+    if(&f_value) {
         res = f_write(&f_value, &pwm_L, sizeof(uint32_t), &bw);
         res = f_write(&f_value, &pwm_R, sizeof(uint32_t), &bw);
     }
     res = f_sync(&f_value);
 }
 
-uint32_t readControlValue(){
+uint32_t readControlValue()
+{
     uint32_t pwm_value = 120;
-    if(&f_value){
+    if(&f_value) {
         res = f_read(&f_value, &pwm_value, sizeof(uint32_t), &br);
         return pwm_value;
     }
     return pwm_value;
 }
 
-void recControlData(uint32_t pwm_L, uint32_t pwm_R, int enc_L, int enc_R){
-    if(&file){
+void recControlData(uint32_t pwm_L, uint32_t pwm_R, int enc_L, int enc_R)
+{
+    if(&file) {
         res = f_printf(&file, "%d %d %d %d\r\n", pwm_L, pwm_R, enc_L, enc_R);
     }
+    //res = f_sync(&file);
+}
+
+void endofRecord(){
     res = f_sync(&file);
 }
 
-void record(){
+void record()
+{
     RecordTimer = xTimerCreate("Data Record Polling", (RECORD_PERIOD), pdTRUE, (void *) 1, pwmrecord);
     xTimerStart(RecordTimer, 0);
 }
 
-void pwmrecord(){
+void pwmrecord()
+{
     speed[0] = SpeedValue_left;
     speed[1] = SpeedValue_right;
     encoder[0] = ENCODER_L.count;
     encoder[1] = ENCODER_R.count;
-    if(&file){
+    if(&file) {
         res = f_printf(&file, "speed:%d,%d  ",speed[0],speed[1]--);
         res = f_printf(&file, "encoder: %d,%d\n", encoder[0], encoder[1]--);
-        }
+    }
     res = f_sync(&file);
 }
 
@@ -95,11 +106,11 @@ FRESULT ff_test(void)
 
     res = f_mount(&fatfs, "", 0);
     if(res != FR_OK) printf("mount failed: %d\n\r", res);
-    
+
     res = f_open(&file, "test.txt", FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
     res = f_open(&file2, "var.txt", FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
     if(res != FR_OK) printf("open failed: %d\n\r", res);
-    
+
     res = f_write(&file, buff, 12 * sizeof(char), &bw);
     res = f_printf(&file, "test-");
     res = f_printf(&file, "speed:%d,%d\n\r",speed[0],speed[1]--);
@@ -109,14 +120,14 @@ FRESULT ff_test(void)
     speed[1] = 1;
     res = f_write(&file2, speed, sizeof(speed), &bw);
     if(res != FR_OK) printf("fwrite failed: %d\n\r", res);
-    
+
     res = f_close(&file);
     res = f_close(&file2);
     if(res != FR_OK) printf("fclose failled: %d\n\r", res);
 
     res = f_mount(NULL,"", 0);
     if(res != FR_OK) printf("umonut failed: %d\n\r", res);
-    
+
     if(res == FR_OK) printf("test fatfs success\n\r");
 }
 
@@ -135,14 +146,13 @@ FRESULT ff_read(void)
     speed[0] = 1;
     speed[1] = 0;
 
-    while(1)
-    {
-    f_gets(line, sizeof(line), &file);
-    if(line[0] == 0) break;
-    USART_puts(USART3, line);
+    while(1) {
+        f_gets(line, sizeof(line), &file);
+        if(line[0] == 0) break;
+        USART_puts(USART3, line);
 
-    int i;
-    for(i = 0; i < 20; i++) line[i] = 0;
+        int i;
+        for(i = 0; i < 20; i++) line[i] = 0;
     }
 
     res = f_read(&file2, speed, sizeof(speed), &br);
