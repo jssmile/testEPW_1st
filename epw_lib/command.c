@@ -11,7 +11,6 @@
 
 extern int SpeedValue_left;
 extern int SpeedValue_right;
-uint32_t inc = 1;
 
 struct receive_cmd_list * receive_cmd_type;
 
@@ -56,31 +55,58 @@ void receive_task()
             USART_puts(USART3, "Actu_A_down");
             USART_puts(USART3, "\r\n");
             set_linearActuator_A_cmd(LINEAR_ACTU_CCW);
-        } else if(received_string[0] == 'a') {
+        } 
+
+        else if(received_string[0] == 'a') {
             USART_puts(USART3, "Actu_A_stop");
             USART_puts(USART3, "\r\n");
             set_linearActuator_A_cmd(LINEAR_ACTU_STOP);
         }
 
-        //Due to the
-        else if(received_string[0] == 'u'){
-            	USART_puts(USART3, "Actu_B_up");
-            	set_linearActuator_B_cmd(LINEAR_ACTU_CW);
-            	USART_puts(USART3, "\r\n");
-        	}
+        else if(received_string[0] == 'u') {
+            USART_puts(USART3, "Actu_B_up");
+            set_linearActuator_B_cmd(LINEAR_ACTU_CW);
+            USART_puts(USART3, "\r\n");
+        }
 
 
-        else if(received_string[0] == 'k'){
-            	USART_puts(USART3, "Actu_B_down");
-            	USART_puts(USART3, "\r\n");
-            	set_linearActuator_B_cmd(LINEAR_ACTU_CCW);
-        	}
+        else if(received_string[0] == 'k') {
+            USART_puts(USART3, "Actu_B_down");
+            USART_puts(USART3, "\r\n");
+            set_linearActuator_B_cmd(LINEAR_ACTU_CCW);
+        }
 
-        else if(received_string[0] == 'w'){
-            	USART_puts(USART3, "Actu_B_stop");
-            	USART_puts(USART3, "\r\n");
-            	set_linearActuator_B_cmd(LINEAR_ACTU_STOP);
-        	}
+        else if(received_string[0] == 'w') {
+            USART_puts(USART3, "Actu_B_stop");
+            USART_puts(USART3, "\r\n");
+            set_linearActuator_B_cmd(LINEAR_ACTU_STOP);
+        }
+
+        //Speed control
+        else if(received_string[0] == 'e') {
+            motor_SpeedUp();
+        }
+
+        else if (received_string[0] == 'z'){
+            motor_SpeedDown();
+        }
+
+        else if(received_string[0] == 'h'){
+            motor_SpeedReset();
+        }
+
+        //Duration control
+        else if(received_string[0] == 'x'){
+            motor_DurationUp();
+        }
+
+        else if(received_string[0] == 'v'){
+            motor_DurationDown();
+        }
+
+        else if(received_string[0] == 'o'){
+            motor_DurationReset();
+        }
 
     }
 }
