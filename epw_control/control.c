@@ -3,11 +3,8 @@
 #include "clib.h"
 #include "record.h"
 
-
-#define Vset		100
 #define Period		50 //ms
-#define cmd_times	50 //times
-xTimerHandle ctrlTimer;
+
 xTimerHandle PIDTimer;
 
 extern Encoder_t ENCODER_L;
@@ -30,6 +27,12 @@ float Kp_right, Ki_right, Kd_right;
 int pwm_value_left_pid = 0;
 int pwm_value_right_pid = 0;
 int pwm_value_left, pwm_value_right, pwm_value_left_err, pwm_value_right_err, pwm_value_left_mcu, pwm_value_right_mcu;
+
+//Speed parameter
+uint32_t speed_parameter = 0;
+
+//Duration parameter
+uint32_t duration_parameter = 0;
 
 //State struct
 State_t EPW_State = EPW_IDLE;
@@ -66,7 +69,7 @@ void Motor_init()
 void test_PID_forward()
 {
     Motor_init();
-    cmd_cnt = 50;
+    cmd_cnt = 50 + (5 * duration_parameter);
     EPW_State = EPW_FORWARD;
 
     if(xTimerIsTimerActive(PIDTimer) != pdTRUE || (PIDTimer == NULL)){
@@ -93,11 +96,11 @@ void PID_forward()
         pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
 
         //Set the safe range of the epw, or the epw may go to the hell
-        if(pwm_value_left_pid > 145)	pwm_value_left_pid = 145;
-        if(pwm_value_left_pid < 130)	pwm_value_left_pid = 130;
+        if(pwm_value_left_pid > (145 + speed_parameter))	pwm_value_left_pid = (145 + speed_parameter);
+        if(pwm_value_left_pid < (130 + speed_parameter))	pwm_value_left_pid = (130 + speed_parameter);
 
-        if(pwm_value_right_pid > 145)	pwm_value_right_pid =145;
-        if(pwm_value_right_pid < 130)	pwm_value_right_pid = 130;
+        if(pwm_value_right_pid > (145 + speed_parameter))	pwm_value_right_pid = (145 + speed_parameter);
+        if(pwm_value_right_pid < (130 + speed_parameter))	pwm_value_right_pid = (130 + speed_parameter);
 
         //use the tuned value for pwm.
         SpeedValue_left = pwm_value_left_pid;
@@ -124,7 +127,7 @@ void PID_forward()
 void test_PID_backward()
 {
     Motor_init();
-    cmd_cnt = 30;
+    cmd_cnt = 30 + (3 * duration_parameter);
     if(xTimerIsTimerActive(PIDTimer) != pdTRUE || (PIDTimer == NULL)){
     PIDTimer = xTimerCreate("pid forward test", (Period), pdTRUE, (void *) 1, PID_backward);
     xTimerStart(PIDTimer, 0);
@@ -149,11 +152,11 @@ void PID_backward()
         pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
 
         //Set the safe range of the epw, or the epw may go to the hell
-        if(pwm_value_left_pid > 107)	pwm_value_left_pid = 107;
-        if(pwm_value_left_pid < 102)	pwm_value_left_pid = 102;
+        if(pwm_value_left_pid > (107 - speed_parameter))	pwm_value_left_pid = (107 - speed_parameter);
+        if(pwm_value_left_pid < (102 - speed_parameter))	pwm_value_left_pid = (102 - speed_parameter);
 
-        if(pwm_value_right_pid > 107)	pwm_value_right_pid =107;
-        if(pwm_value_right_pid < 102)	pwm_value_right_pid = 102;
+        if(pwm_value_right_pid > (107 - speed_parameter))	pwm_value_right_pid =(107 - speed_parameter);
+        if(pwm_value_right_pid < (102 - speed_parameter))	pwm_value_right_pid = (102 - speed_parameter);
 
         //use the tuned value for pwm.
         SpeedValue_left = pwm_value_left_pid;
@@ -179,7 +182,7 @@ void PID_backward()
 void test_PID_left()
 {
     Motor_init();
-    cmd_cnt = 20;
+    cmd_cnt = 20 + (2 * duration_parameter);
     if(xTimerIsTimerActive(PIDTimer) != pdTRUE || (PIDTimer == NULL)){
     PIDTimer = xTimerCreate("pid forward test", (Period), pdTRUE, (void *) 1, PID_left);
     xTimerStart(PIDTimer, 0);
@@ -204,11 +207,11 @@ void PID_left()
         pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
 
         //Set the safe range of the epw, or the epw may go to the hell
-        if(pwm_value_left_pid > 105)	pwm_value_left_pid = 105;
-        if(pwm_value_left_pid < 100)	pwm_value_left_pid = 100;
+        if(pwm_value_left_pid > (105 - speed_parameter))	pwm_value_left_pid = (105 - speed_parameter);
+        if(pwm_value_left_pid < (100 - speed_parameter))	pwm_value_left_pid = (100 - speed_parameter);
 
-        if(pwm_value_right_pid > 140)	pwm_value_right_pid =140;
-        if(pwm_value_right_pid < 130)	pwm_value_right_pid = 130;
+        if(pwm_value_right_pid > (140 + speed_parameter))	pwm_value_right_pid = (140 + speed_parameter);
+        if(pwm_value_right_pid < (130 + speed_parameter))	pwm_value_right_pid = (130 + speed_parameter);
 
         //use the tuned value for pwm.
         SpeedValue_left = pwm_value_left_pid;
@@ -234,7 +237,7 @@ void PID_left()
 void test_PID_right()
 {
     Motor_init();
-    cmd_cnt = 20;
+    cmd_cnt = 20 + (2 * duration_parameter);
     if(xTimerIsTimerActive(PIDTimer) != pdTRUE || (PIDTimer == NULL)){
     PIDTimer = xTimerCreate("pid forward test", (Period), pdTRUE, (void *) 1, PID_right);
     xTimerStart(PIDTimer, 0);
@@ -259,11 +262,11 @@ void PID_right()
         pwm_value_right_pid = round(pid_cal(&PID_Motor_R , set_encoder_count , cnt[1]));
 
         //Set the safe range of the epw, or the epw may go to the hell
-        if(pwm_value_left_pid > 140)	pwm_value_left_pid = 140;
-        if(pwm_value_left_pid < 130)	pwm_value_left_pid = 130;
+        if(pwm_value_left_pid > (140 + speed_parameter))	pwm_value_left_pid = (140 + speed_parameter);
+        if(pwm_value_left_pid < (130 + speed_parameter))	pwm_value_left_pid = (130 + speed_parameter);
 
-        if(pwm_value_right_pid > 105)	pwm_value_right_pid =105;
-        if(pwm_value_right_pid < 100)	pwm_value_right_pid = 100;
+        if(pwm_value_right_pid > (105 - speed_parameter))	pwm_value_right_pid = (105 - speed_parameter);
+        if(pwm_value_right_pid < (100 - speed_parameter))	pwm_value_right_pid = (100 - speed_parameter);
 
         //use the tuned value for pwm.
         SpeedValue_left = pwm_value_left_pid;
@@ -291,4 +294,74 @@ void motor_Stop()
     SpeedValue_right = 120;
     EPW_State = EPW_STOP;
     mMove (SpeedValue_left, SpeedValue_right);
+}
+
+void motor_SpeedUp(){
+    if(speed_parameter < 10){
+        speed_parameter +=1;
+        USART_puts(USART3, "Speed UP!");
+        USART_puts(USART3, "\r\n");
+        USART_putd(USART3, speed_parameter);
+        USART_puts(USART3, "\r\n");
+    }
+    else{
+        USART_puts(USART3, "Speed Up reaches max!!!");
+        USART_puts(USART3, "\r\n");
+    }
+}
+
+void motor_SpeedDown(){
+    if(speed_parameter >0 && speed_parameter <= 10){
+        speed_parameter -=1;
+        USART_puts(USART3, "Speed DOWN!");
+        USART_puts(USART3, "\r\n");
+        USART_putd(USART3, speed_parameter);
+        USART_puts(USART3, "\r\n");
+    }
+    else{
+        USART_puts(USART3, "Speed Down reaches min!!!");
+        USART_puts(USART3, "\r\n");
+    }
+}
+
+void motor_SpeedReset(){
+    USART_puts(USART3, "Speed Reset!!!");
+    USART_puts(USART3, "\r\n");
+    speed_parameter = 0;
+}
+
+//Duration
+void motor_DurationUp(){
+    if(duration_parameter < 10){
+        duration_parameter += 1;
+        USART_puts(USART3, "Duration Up!");
+        USART_puts(USART3, "\r\n");
+        USART_putd(USART3, duration_parameter);
+        USART_puts(USART3, "\r\n");
+    }
+    else{
+        USART_puts(USART3, "Duration up reched max!!!");
+        USART_puts(USART3, "\r\n");
+    }
+
+}
+
+void motor_DurationDown(){
+    if(duration_parameter > 0 && duration_parameter <= 10){
+        duration_parameter -= 1;
+        USART_puts(USART3, "Duration down !!!");
+        USART_puts(USART3, "\r\n");
+        USART_putd(USART3, duration_parameter);
+        USART_puts(USART3, "\r\n");
+    }
+    else{
+        USART_puts(USART3, "Duration down reches min!!!");
+        USART_puts(USART3, "\r\n");
+    }
+}
+
+void motor_DurationReset(){
+    USART_puts(USART3, "Duration Reset!");
+    USART_puts(USART3, "\r\n");
+    duration_parameter = 0;
 }

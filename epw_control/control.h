@@ -22,4 +22,8 @@ void PID_right(void);
 
 void motor_Stop(void);
 
+void motor_SpeedUp(void);
+void motor_SpeedDown(void);
+void motor_SpeedReset(void);
+
 #endif
