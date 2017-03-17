@@ -83,7 +83,7 @@ void receive_task()
         }
 
         //Speed control
-        else if(received_string[0] == 'e') {
+        else if(received_string[0] == 'p') {
             motor_SpeedUp();
         }
 
